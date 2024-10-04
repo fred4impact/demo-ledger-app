@@ -1,0 +1,49 @@
+name: CI/CD for ledgerapp
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build and tag Docker image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ledgerapp:${{ github.sha }} .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/ledgerapp:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Kubernetes manifests repository
+        uses: actions/checkout@v2
+        with:
+          repository: https://github.com/fred4impact/demo-ledger-app.git/k8s/
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update image tag in Kubernetes manifest
+        run: |
+          sed -i "s#runtesting/ledgerapp:.*#runtesting/ledgerapp:${{ github.sha }}#g" deployment.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add deployment.yaml
+          git commit -m "Update image tag to ${{ github.sha }}"
+          git push origin main
