@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ledgerapp-deployment
+  name: ledger-app-deployment
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: ledgerapp
+      app: ledger-app
   template:
     metadata:
       labels:
-        app: ledgerapp
+        app: ledger-app
     spec:
       containers:
-        - name: ledgerapp
+        - name: ledger-app
           image: runtesting/ledger:${IMAGE_TAG}
           ports:
             - containerPort: 8000

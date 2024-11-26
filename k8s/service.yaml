@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ledgerapp-service
+  name: ledger-app-service
 spec:
   selector:
-    app: ledgerapp
+    app: ledger-app
   ports:
     - protocol: TCP
       port: 80
